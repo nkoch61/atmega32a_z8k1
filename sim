@@ -1,0 +1,2 @@
+#!/bin/sh
+simulavr -g -d atmega32 -f z8k1.elf -F 8000000

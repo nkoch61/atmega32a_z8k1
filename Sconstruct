@@ -1,14 +1,18 @@
 e=Environment(CC = 'avr-gcc',
-              CCFLAGS='-mmcu=atmega32 -std=c99 -O2 -g -mrelax -Wall -Wno-unused-function',
+              CCFLAGS='-mmcu=atmega32 -std=gnu11 -Os -mcall-prologues -g -mrelax -Wall -Wno-unused-function -Wno-missing-braces',
               CPPDEFINES = ['F_CPU=8000000',
                             'BAUD=38400',
                             'WITH_IDLESLEEP=1',
-                            'UART_CBUF_LEN=256' ],
+                            'UART_CBUF_LEN=128' ],
               LINKFLAGS='-mmcu=atmega32')
 elf=e.Program('z8k1.elf',
               [ 'main.c',
+                'disasm.c',
                 'cmdint.c',
+                'ihex.c',
                 'uart.c',
+                'interrupt2.c',
+                'timerint.c',
                 'timer.c' ])
 hex=e.Command('z8k1.hex', elf, "avr-objcopy -j .text -j .data -O ihex $SOURCE $TARGET")
 e.Command('burn', hex,       "avrdude -c stk500v2 -P /dev/ttyACM0 -p m32 -v -U flash:w:$SOURCE")
@@ -17,6 +21,7 @@ e.Command('burnfuses', hex,  "avrdude -c stk500v2 -P /dev/ttyACM0 -p m32 -v -U l
 e.Command('uburnfuses', hex, "avrdude -c usbasp                   -p m32 -v -U lfuse:w:0x3F:m      -U hfuse:w:0xc9:m")
 e.Command('readfuses', hex,  "avrdude -c stk500v2 -P /dev/ttyACM0 -p m32 -v -U lfuse:r:lfuse.hex:i -U hfuse:r:hfuse.hex:i")
 e.Command('verify', hex,     "avrdude -c stk500v2 -P /dev/ttyACM0 -p m32 -v -U flash:v:$SOURCE:i")
+e.Command('uverify', hex,    "avrdude -c usbasp                   -p m32 -v -U flash:v:$SOURCE:i")
 e.Command('read', [],        "avrdude -c stk500v2 -P /dev/ttyACM0 -p m32 -v -U flash:r:avrdude_readback.hex:i")
 e.Command('erase', [],       "avrdude -c stk500v2 -P /dev/ttyACM0 -p m32 -F -v -e")
 e.Command('terminal', [],    "avrdude -c stk500v2 -P /dev/ttyACM0 -p m32 -F -v -t")

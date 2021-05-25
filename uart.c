@@ -1,5 +1,5 @@
 /*
- * $Header: /home/playground/src/atmega32/z8k1/uart.c,v 2111f61244b4 2021/03/12 19:43:54 nkoch $
+ * $Header: /home/playground/src/atmega32/z8k1/uart.c,v 482ed9f39b30 2021/05/11 18:25:09 nkoch $
  */
 
 
@@ -29,8 +29,13 @@ static void dummy_sleep (void)
 }
 
 
-void (*uart_getc_sleep) (void) = dummy_sleep;
-void (*uart_putc_sleep) (void) = dummy_sleep;
+static void dummy_event (uint8_t c)
+{
+}
+
+
+void (*uart_sleep) (void) = dummy_sleep;
+void (*uart_inevent) (uint8_t c) = dummy_event;
 
 
 // UART Empfangsinterrupt
@@ -51,7 +56,8 @@ ISR (USART_RXC_vect)
   else
   {
     u_set_overrun (&uart_rxd);
-  }
+  };
+  uart_inevent (c);
 }
 
 
@@ -83,7 +89,7 @@ uint8_t uart_getc_wait (void)
 {
   while (u_empty (&uart_rxd))
   {
-    uart_getc_sleep ();
+    uart_sleep ();
   };
   return u_get (&uart_rxd);
 }
@@ -111,9 +117,50 @@ void uart_putc_wait (uint8_t c)
 {
   while (u_full (&uart_txd))
   {
-    uart_putc_sleep ();
+    uart_sleep ();
   };
   uart_putc (c);
+}
+
+
+int uart_in_peek (void)
+{
+  return u_peek (&uart_rxd);
+}
+
+
+bool uart_in_empty ()
+{
+  return u_empty (&uart_rxd);
+}
+
+
+uint16_t uart_in_used ()
+{
+  return u_used (&uart_rxd);
+}
+
+
+uint16_t uart_out_avail ()
+{
+  return u_avail (&uart_rxd);
+}
+
+
+void uart_drain ()
+{
+  while (!u_empty (&uart_txd))
+  {
+    uart_sleep ();
+  }
+}
+
+
+void uart_flush ()
+{
+  while (uart_getc_nowait () != -1)
+  {
+  }
 }
 
 

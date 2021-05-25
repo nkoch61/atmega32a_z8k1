@@ -1,5 +1,5 @@
 /*
- * $Header: /home/playground/src/atmega32/z8k1/cmdint.c,v 40a1410d27f4 2021/03/09 22:05:59 nkoch $
+ * $Header: /home/playground/src/atmega32/z8k1/cmdint.c,v 79c4a60b1113 2021/05/23 14:28:53 nkoch $
  */
 
 
@@ -8,15 +8,18 @@
 #include "cmdint.h"
 
 
-static int cmdint_getline (const CmdIntCallback_t *callback,
-                           char *ptr,
-                           char *bptr,
-                           size_t len)
+int8_t cmdint_getline (const CmdIntCallback_t *callback,
+                    char *ptr,
+                    char *bptr,
+                    uint8_t len)
 {
   int c;
   char *p;
 
-  callback->prompt_f ();
+  if (callback->prompt_f)
+  {
+    callback->prompt_f ();
+  };
   for (p = ptr; (c = callback->getc_f ()) != -1;)
   {
     if (isascii (c) && isprint (c) && p-ptr < len)
@@ -30,16 +33,15 @@ static int cmdint_getline (const CmdIntCallback_t *callback,
       {
         case '\r':
           *p = '\0';
-          callback->cr_f ();
-          callback->lf_f ();
+          callback->crlf_f ();
           return p-ptr;
 
         case 'R'-'@':
-          if (p == ptr)
+          if (bptr && p == ptr)
           {
             strcpy (ptr, bptr);
           };
-          while (*p)
+          while (p-ptr < len && *p)
           {
             callback->putc_f (*p++);
           };
@@ -48,8 +50,7 @@ static int cmdint_getline (const CmdIntCallback_t *callback,
         case 'C' - '@':
           *ptr = '\0';
           callback->cancel_f ();
-          callback->cr_f ();
-          callback->lf_f ();
+          callback->crlf_f ();
           return -1;
 
         case '\b':
@@ -82,7 +83,7 @@ void cmdint (const CmdIntCallback_t *callback)
 {
   static char backup[81];
   char line[81];
-  int argc;
+  int8_t argc;
   char *argv[11];
   char *str1, *str2;
   char *token, *subtoken;
@@ -95,6 +96,10 @@ void cmdint (const CmdIntCallback_t *callback)
       break;
     };
     strcpy (backup, line);
+    if (!callback->interp_f)
+    {
+      return;
+    };
     for (str1 = line; (token = strtok_r (str1, ";", &saveptr1)); str1 = NULL)
     {
       for (argc = 0, str2 = token; argc < 10 && (subtoken = strtok_r (str2, " ", &saveptr2)); str2 = NULL)
@@ -107,7 +112,7 @@ void cmdint (const CmdIntCallback_t *callback)
         return;
       }
     };
-    if (callback->line_f () == -1)
+    if (callback->line_f && callback->line_f () == -1)
     {
       return;
     }
