@@ -1,5 +1,5 @@
 /*
- * $Header: /home/playground/src/atmega32/z8k1/main.c,v 4d3f4103818c 2021/05/25 18:58:49 nkoch $
+ * $Header: /home/playground/src/atmega32/z8k1/main.c,v e6102cd9283d 2021/05/25 21:41:10 nkoch $
  */
 
 
@@ -30,7 +30,7 @@
 #include "disasm.h"
 
 
-static const __flash char program_version[] = "1.10.1 " __DATE__ " " __TIME__;
+static const __flash char program_version[] = "1.10.2 " __DATE__ " " __TIME__;
 
 
 static int z8k1_getc (void);
@@ -1977,7 +1977,7 @@ static void zbios_hc_breakpoint (void)
 {
   char buf[64];
   zbios_read_regs ();
-  snprintf_P (buf, sizeof buf, PSTR("\r\nbreak at %05x"), zbios_read_pcaddr ());
+  snprintf_P (buf, sizeof buf, PSTR("\r\nbreak at %05lx"), zbios_read_pcaddr ());
   z8k1_putsln (buf);
   host_interface_active = false;
 }
