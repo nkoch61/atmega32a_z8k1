@@ -1,0 +1,57 @@
+Name z8k1;
+Partno D1;
+Date 2021-03-15;
+Revision 1.0.2;
+Designer nkoch@posteo.de;
+Company Wieleda;
+Assembly None;
+Location None;
+Device g22v10;
+
+
+/*
+ * Inputs
+ */
+
+Pin  1 	= CLK;
+Pin  2 	= AD0;
+Pin  3 	= PIN3;
+Pin  4 	= !AS;
+Pin  5 	= PIN5;
+Pin  6 	= BYT;
+Pin  7 	= !MREQ;
+Pin  8 	= !WR;
+Pin  9 	= !DS;
+Pin 10 	= PIN10;
+Pin 11 	= SN1;
+Pin 13 	= PIN13;
+
+
+/*
+ * Outputs
+ *
+ */
+
+Pin 14 	= LE_LATCH;
+Pin 15 	= PIN15;
+Pin 16 	= PIN16;
+Pin 17 	= !OE;
+Pin 18 	= PIN18;
+Pin 19 	= !WE_ODD;
+Pin 20 	= PIN20;
+Pin 21 	= !WE_EVEN;
+Pin 22 	= A0;
+Pin 23 	= A16;
+
+
+
+/*
+ * Logic
+ */
+
+LE_LATCH 	= AS;
+OE       	= MREQ & DS & !WR;
+A0 		= (A0  & !AS) # (AD0 & AS);
+A16 		= (A16 & !AS) # (SN1 & AS);
+WE_EVEN 	= DS & WR & (!BYT # !A0);
+WE_ODD  	= DS & WR & (!BYT #  A0);
